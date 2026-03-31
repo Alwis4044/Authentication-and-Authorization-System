@@ -6,6 +6,7 @@ import com.alwis.identity.auth.dto.RegisterRequest;
 import com.alwis.identity.auth.entity.Role;
 import com.alwis.identity.auth.entity.User;
 import com.alwis.identity.auth.repository.UserRepository;
+import com.alwis.identity.auth.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
 
     @Override
@@ -47,6 +49,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // JWT will be added in next step
-        return new AuthResponse("Login successful (token coming next)");
+        String token = jwtService.generateToken(user.getUsername());
+
+        //return new AuthResponse("Login successful (token coming next)");
+        return new AuthResponse(token);
     }
 }
