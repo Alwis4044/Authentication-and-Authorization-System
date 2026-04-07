@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -24,10 +26,11 @@ public class AuthServiceImpl implements AuthService {
     public String register(RegisterRequest request) {
 
         if(userRepository.existsByUsername(request.getUsername())){
-            throw new RuntimeException("Username already exists");
+            throw new IllegalArgumentException("Username already exists");
         }
 
         User user = User.builder()
+                .id(UUID.randomUUID().toString())
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -49,7 +52,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // JWT will be added in next step
-        String token = jwtService.generateToken(user.getUsername());
+        String token = jwtService.generateToken(
+                user.getUsername(),
+                user.getRole().name());
 
         //return new AuthResponse("Login successful (token coming next)");
         return new AuthResponse(token);

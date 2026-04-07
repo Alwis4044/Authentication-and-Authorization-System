@@ -20,9 +20,10 @@ public class JwtService {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    public String generateToken(String username){
+    public String generateToken(String username,String role){
         return Jwts.builder()
                 .setSubject(username)
+                .claim("role",role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
                 .signWith(getSignKey(),SignatureAlgorithm.HS256)
@@ -41,13 +42,25 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
+    public String extractRole(String token){
+        return extractAllClaims(token).get("role",String.class);
+    }
+
     private <T> T extractClaim(String token, Function<Claims, T> resolver){
-        Claims claims = Jwts.parserBuilder()
+//        Claims claims = Jwts.parserBuilder()
+//                .setSigningKey(getSignKey())
+//                .build()
+//                .parseClaimsJws(token)
+//                .getBody();
+        final Claims claims = extractAllClaims(token);
+        return resolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(getSignKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-
-        return resolver.apply(claims);
     }
 }
