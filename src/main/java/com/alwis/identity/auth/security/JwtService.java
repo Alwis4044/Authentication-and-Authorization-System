@@ -30,6 +30,17 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateRefreshToken(String username){
+        return Jwts.builder()
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7)) // 7 days
+                .signWith(getSignKey(),SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+
+    // Reads username from token
     public String extractUsername(String token){
         return extractClaim(token, Claims::getSubject);
     }
@@ -38,10 +49,11 @@ public class JwtService {
         return username.equals(extractUsername(token)) && !isTokenExpired(token);
     }
 
-    private boolean isTokenExpired(String token){
+    public boolean isTokenExpired(String token){
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
+    // Reads role from payload
     public String extractRole(String token){
         return extractAllClaims(token).get("role",String.class);
     }

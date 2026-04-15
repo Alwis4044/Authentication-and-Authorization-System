@@ -50,12 +50,39 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // JWT will be added in next step
-        String token = jwtService.generateToken(
+//        // JWT will be added in next step
+//        String token = jwtService.generateToken(
+//                user.getUsername(),
+//                user.getRole().name());
+
+        String accessToken = jwtService.generateToken(
                 user.getUsername(),
-                user.getRole().name());
+                user.getRole().name()
+        );
+
+        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
 
         //return new AuthResponse("Login successful (token coming next)");
-        return new AuthResponse(token);
+        return new AuthResponse(accessToken, refreshToken);
     }
+
+    @Override
+    public AuthResponse refresh(String refreshToken){
+        String username = jwtService.extractUsername(refreshToken);
+
+        if(username == null || jwtService.isTokenExpired(refreshToken)){
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String newAccessToken = jwtService.generateToken(
+                user.getUsername(),
+                user.getRole().name()
+        );
+
+        return new AuthResponse(newAccessToken, refreshToken);
+    }
+
 }
